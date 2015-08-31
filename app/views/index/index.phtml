@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>demo</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="jquery.js"></script>
+	<style type="text/css">
+	    table{
+		border: solid 1px black;
+		border-collapse: collapse;
+	    }
+	    td{
+		min-width: 100px;
+		text-align: center;
+		padding: 5px;
+	    }
+	    #page{
+		margin-top: 30px;
+	    }
+	    #div1{
+		padding: 20px;
+	    }
+	    #div2{
+		margin-top: 30px;
+	    }
+	</style>
+    </head>
+    <body>
+        <div id="div1">
+            <form id="form1" >
+                <table>
+                <tr>
+                    <td>姓名:</td>
+                    <td><input type="text" name="name" /></td>
+                </tr>
+                <tr>
+                    <td>手机号:</td>
+                    <td><input type="text" name="phone" /></td>
+                </tr> 
+                <tr>
+                    <td colspan="2"><input type="button" id="btn1" value="提交" /></td>
+                </tr>                                
+                </table>
+            </form>
+	    <div id="div2">
+		<table>
+		    <tr>
+			<th>id</th>
+			<th>姓名</th>
+			<th>手机号</th>
+		    </tr>
+		    <tbody id="tbody1">
+
+		    </tbody>
+		</table>
+	    </div>
+	    <div id="pagediv">
+		<select name="page" id="page">
+		    <option value="1">第1页</option>
+		</select>
+	    </div>
+        </div>
+	<script type="text/javascript">
+	    //获取列表
+	    function getList(){
+		//获取页数
+		var page=$("#page").val();
+		$.ajax({
+		    url:'/phonebook/list',
+		    data:{pageSize:5,page:page},
+		    dataType:'json',
+		    type:'post',
+		    success:function(data){
+			$("#tbody1").empty();
+			$("#page").empty();
+			
+			//页码数据
+			var totalpage=data.pages;
+			for(var i=1;i<=totalpage;i++){
+			    var opt=$("<option></option>");
+			    opt.val(i);
+			    opt.html('第'+i+'页');
+			    $("#page").append(opt);
+			}
+			$("#page option[value='"+data.page+"']").attr("selected",true);
+			
+			$.each(data.list,function(index,item){
+			    //id
+			    var id=$("<td></td>");
+			    id.html(item.id);
+			    
+			    //姓名
+			    var name=$("<td></td>");
+			    name.html(item.name);
+			    
+			    //手机号
+			    var phone=$("<td></td>");
+			    phone.html(item.phone);
+			    
+			    var tr=$("<tr></tr>");
+			    tr.append(id);
+			    tr.append(name);
+			    tr.append(phone);
+			    
+			    $("#tbody1").append(tr);
+			    
+			});
+		    },
+		    error:function(){
+			
+		    }		    
+		});
+	    }
+	    getList();
+	    $("#page").on("change",function(){
+		getList();
+	    });
+	    //添加数据
+	    $("#btn1").on("click",function(){
+		var name=$("#form1  input[name='name']").val();
+		var phone=$("#form1 input[name='phone']").val();
+		if (name=='') {
+		    alert("姓名不能为空!");
+		    return false;
+                }
+		if (phone=='') {
+		    alert("手机号不能为空！");
+		    return false;
+		}
+		$.ajax({
+		    url:'/phonebook/add',
+		    data:{name:name,phone:phone},
+		    dataType:'json',
+		    type:'post',
+		    success:function(data){
+			if (data.resultCode==1) {
+			    alert("添加成功！");
+			    $("#form1")[0].reset();
+			    getList();
+			    return false;
+                        }else{
+			    alert("添加失败!"+data.resultMsg);
+			    return false;
+			}
+		    },
+		    error:function(){
+			
+		    }
+		});
+	    });
+	</script>
+    </body>
+</html>
